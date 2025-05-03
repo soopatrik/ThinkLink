@@ -1,7 +1,9 @@
-
-
 **ThinkLink
-**A collaborative mind mapping and project management tool designed to enhance team productivity through visual thinking and organization.
+**
+
+ A collaborative mind mapping and project management tool designed to enhance team productivity through visual thinking and organization.
+
+
 
 📋 Table of Contents
 
@@ -18,6 +20,7 @@ ThinkLink is a Java-based desktop application that combines mind mapping with pr
 Built as a collaborative tool, ThinkLink supports role-based access with different permissions for administrators and regular users, following the UML design principles outlined in the project requirements.
 
 Features
+
 🧠 Visual Mind Mapping
 Create and connect idea boxes with intuitive drag-and-drop
 Link related concepts with directional arrows
@@ -48,38 +51,11 @@ User authentication system
 Role-based access control (Administrator/Customary)
 Private data protection
 
-Project Structure
-ThinkLink/
-├── src/
-│   └── main/
-│       └── java/
-│           ├── application/   # Main application components
-│           │   ├── ThinkLink.java      # Entry point
-│           │   └── Dashboard.java      # Main UI container
-│           ├── auth/          # Authentication components
-│           │   ├── LoginScreen.java    # Login UI
-│           │   └── User.java           # User model
-│           ├── board/         # Mind mapping components
-│           │   ├── BoardPanel.java     # Board UI
-│           │   ├── Box.java            # Node representation
-│           │   ├── Line.java           # Connection representation
-│           │   ├── BoxList.java        # Box collection
-│           │   ├── LineList.java       # Line collection
-│           │   └── SharedBoardPanel.java # Shared boards UI
-│           ├── calendar/      # Calendar components
-│           │   ├── CalendarPanel.java  # Calendar UI
-│           │   ├── Date.java           # Date model
-│           │   └── Deadline.java       # Deadline model
-│           ├── checklist/     # Task management components
-│           │   ├── ChecklistPanel.java # Checklist UI
-│           │   └── Checklist.java      # Checklist model
-│           ├── notes/         # Note-taking components
-│           │   ├── NotePanel.java      # Notes UI
-│           │   └── Note.java           # Note model
-│           └── utils/         # Utility components
-│               └── SaveAndLoad.java    # Data persistence
 
-Setup & Installation
+
+**Setup & Installation
+**
+
 
 Prerequisites
 Java Development Kit (JDK) 11 or newer
