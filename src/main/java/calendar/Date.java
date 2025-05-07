@@ -1,4 +1,4 @@
-package main.java.calendar;
+package main.calendar;
 
 /**
  * Date entity as defined in the UML class diagram.

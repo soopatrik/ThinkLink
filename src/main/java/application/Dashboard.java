@@ -1,13 +1,13 @@
-package main.java.application;
+package main.application;
 
 import javax.swing.*;
 import java.awt.*;
-import main.java.board.BoardPanel;
+import main.board.BoardPanel;
 import main.notes.NotePanel;
 import main.checklist.ChecklistPanel;
-import main.java.calendar.CalendarPanel;
-import main.java.auth.User;
-import main.java.board.SharedBoardPanel;
+import main.calendar.CalendarPanel;
+import main.auth.User;
+import main.board.SharedBoardPanel;
 
 public class Dashboard extends JFrame {
     private User user;

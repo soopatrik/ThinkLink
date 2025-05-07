@@ -1,9 +1,9 @@
-package main.java.auth;
+package main.auth;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import main.java.application.Dashboard;
+import main.application.Dashboard;
 
 /**
  * Login screen for ThinkLink application.

@@ -1,4 +1,4 @@
-package main.java.calendar;
+package main.calendar;
 
 import javax.swing.*;
 import java.awt.*;
@@ -8,9 +8,9 @@ import java.time.format.*;
 import java.util.*;
 import java.util.List;
 import java.text.SimpleDateFormat;
-import main.java.auth.User;
+import main.auth.User;
 import javax.swing.table.AbstractTableModel;
-import main.java.calendar.Deadline;
+import main.calendar.Deadline;
 
 public class CalendarPanel extends JPanel {
     private LocalDate currentDate = LocalDate.now();

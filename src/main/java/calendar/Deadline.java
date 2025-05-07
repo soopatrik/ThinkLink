@@ -1,6 +1,6 @@
-package main.java.calendar;
+package main.calendar;
 
-import main.java.auth.User;
+import main.auth.User;
 import java.util.Date;
 
 /**

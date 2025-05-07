@@ -1,4 +1,4 @@
-package main.java.board;
+package main.board;
 ///////////////////////////////////////////////////
 
 //Hold the info particular to each graphical Line//

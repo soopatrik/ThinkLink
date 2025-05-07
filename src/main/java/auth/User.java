@@ -1,9 +1,10 @@
-package main.java.auth;
+package main.auth;
 
 /**
  * User entity as defined in the UML class diagram.
  * Represents a user of the system with role-based permissions.
  */
+
 public class User {
     private String userEmail;
     private String role;

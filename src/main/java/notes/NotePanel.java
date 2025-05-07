@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.List;
 import javax.swing.event.ListSelectionListener;
 
-import main.java.utils.SaveAndLoad;
+import main.utils.SaveAndLoad;
 
 /**
  * Panel for managing personal notes in ThinkLink

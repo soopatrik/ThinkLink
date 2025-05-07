@@ -1,4 +1,4 @@
-package main.java.utils;
+package main.utils;
 
 /////////////////////////////////////////////////////
 //////Class for Saving and Loading the MindMap///////
@@ -14,8 +14,9 @@ import java.util.*;
 import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
 
-import main.java.board.Box;
-import main.java.board.BoxList;
+import main.board.Box;
+import main.board.BoxList;
+import main.notes.Note;
 
 /**
  * Handles saving and loading ThinkLink data, including boards, notes,
@@ -423,7 +424,8 @@ public class SaveAndLoad {
 		}
 	}
 
-	public void saveAllBoards(List<Board> boards, String username) {
+
+	/* public void saveAllBoards(List<Board> boards, String username) {
 		// Convert boards to JSON
 		// Write to file: user_data/{username}/boards.json
 	}
@@ -434,4 +436,6 @@ public class SaveAndLoad {
 	}
 
 	// Similar methods for checklists and calendar events
+}
+	 */
 }

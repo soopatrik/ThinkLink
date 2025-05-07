@@ -1,7 +1,7 @@
-package main.java.application;
+package main.application;
 
 import javax.swing.*;
-import main.java.auth.LoginScreen;
+import main.auth.LoginScreen;
 
 /**
  * Main entry point for the ThinkLink application

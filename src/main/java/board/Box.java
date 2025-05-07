@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////
 //Box: Hold the info particular to each graphical Box//
 ///////////////////////////////////////////////////////
-package main.java.board;
+package main.board;
 
 import java.awt.Dimension;
 import java.awt.Point;
