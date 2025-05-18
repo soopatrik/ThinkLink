@@ -9,7 +9,7 @@ import main.application.Dashboard;
  * Login screen for ThinkLink application.
  * Handles user authentication and role selection.
  */
-public class LoginScreen extends JFrame {
+public class   LoginScreen extends JFrame {
     private JTextField usernameField;
     private JRadioButton adminButton, userButton;
     private JButton loginButton;
