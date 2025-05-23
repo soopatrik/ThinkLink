@@ -22,3 +22,6 @@ logCache.bin
 *.tmp
 *.temp
 *.log
+saved_boards/
+shared_board.json
+data/shared_goals.json
