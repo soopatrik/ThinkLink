@@ -1,19 +1,24 @@
 # Compiled class files
 *.class
 bin/
+target/
 
 # IDE files
 .idea/
 .vscode/
 *.iml
+*.ipr
+*.iws
 
-# Build folders
-target/
-build/
-
-# User data
-user_data/
-
-# System files
+# OS files
 .DS_Store
 Thumbs.db
+
+# Runtime data
+data/
+logCache.bin
+
+# Temporary files
+*.tmp
+*.temp
+*.log
