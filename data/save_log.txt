@@ -55,13 +55,3 @@
 2025-05-03 12:01:21 - Loaded note: this_is_a_new_note for user admin
 2025-05-03 12:01:21 - Loaded note: New_Note_yes for user admin
 2025-05-03 12:01:21 - Loaded note: Welcome_to_Notes for user admin
-2025-05-05 09:26:47 - Saved note: Welcome to Notes for user Hamzy
-2025-05-05 09:29:21 - Saved note: Welcome to Notes for user sgsggagerg
-2025-05-05 09:30:33 - Saved note: Welcome to Notes for user rfwfwef
-2025-05-05 09:32:35 - Saved note: Welcome to Notes for user ggg
-2025-05-07 12:09:51 - Saved note: Welcome to Notes for user Hamsa
-2025-05-07 12:42:28 - Saved note: Welcome to Notes for user Hamsa123
-2025-05-07 12:42:50 - Saved note: Welcome to Notes for user Hamsa134
-2025-05-07 12:43:52 - Saved note: Welcome to Notes for user Kristiti
-2025-05-10 14:00:40 - Saved note: Welcome to Notes for user hgkhjg
-2025-05-18 11:43:34 - Saved note: Welcome to Notes for user cristi

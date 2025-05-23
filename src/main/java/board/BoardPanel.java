@@ -1,12 +1,12 @@
 // BoardPanel.java (converted from RenderPanel.java)
-package main.board;
+package main.java.board;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
-import main.auth.User;
+import main.java.auth.User;
 
 public class BoardPanel extends JPanel implements MouseListener, MouseMotionListener {
 	private User user;

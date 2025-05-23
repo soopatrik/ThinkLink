@@ -1,15 +1,15 @@
-package main.auth;
+package main.java.auth;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import main.application.Dashboard;
+import main.java.application.Dashboard;
 
 /**
  * Login screen for ThinkLink application.
  * Handles user authentication and role selection.
  */
-public class   LoginScreen extends JFrame {
+public class LoginScreen extends JFrame {
     private JTextField usernameField;
     private JRadioButton adminButton, userButton;
     private JButton loginButton;

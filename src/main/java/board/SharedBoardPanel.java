@@ -1,4 +1,4 @@
-package main.board;
+package main.java.board;
 
 import javax.swing.*;
 import java.awt.*;
@@ -7,9 +7,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.awt.Frame;
 import java.awt.Window;
-import main.auth.User;
-import main.calendar.Deadline;
-import main.calendar.Date;
+import main.java.auth.User;
+import main.java.calendar.Deadline;
+import main.java.calendar.Date;
 
 public class SharedBoardPanel extends JPanel {
     private User user;
