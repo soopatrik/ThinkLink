@@ -10,6 +10,7 @@ import java.nio.file.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import org.json.*;
 
 import javax.imageio.ImageIO;
 import javax.swing.JOptionPane;
@@ -18,33 +19,104 @@ import main.java.board.Box;
 import main.java.board.BoxList;
 
 /**
- * Handles saving and loading ThinkLink data, including boards, notes,
- * checklists, and calendar deadlines.
+ * Simplified SaveAndLoad class focused on shared board state
  */
 public class SaveAndLoad {
 	private static final String DATA_DIR = "data";
+	private static final String SHARED_BOARD_FILE = DATA_DIR + "/shared_board.json";
 	private static final String BOARDS_DIR = DATA_DIR + "/boards";
 	private static final String NOTES_DIR = DATA_DIR + "/notes";
 	private static final String CHECKLISTS_DIR = DATA_DIR + "/checklists";
 	private static final String CALENDAR_DIR = DATA_DIR + "/calendar";
 
-	// Constructor - ensure data directories exist
+	// Constructor - ensure data directory exists
 	public SaveAndLoad() {
-		initializeDirectories();
+		try {
+			Files.createDirectories(Paths.get(DATA_DIR));
+		} catch (IOException e) {
+			System.err.println("Error creating data directory: " + e.getMessage());
+		}
 	}
 
 	/**
-	 * Creates the necessary directories for data storage
+	 * Saves the shared board state that all users can access
 	 */
-	private void initializeDirectories() {
+	public void saveSharedBoard(BoxList boxList) {
 		try {
-			Files.createDirectories(Paths.get(DATA_DIR));
-			Files.createDirectories(Paths.get(BOARDS_DIR));
-			Files.createDirectories(Paths.get(NOTES_DIR));
-			Files.createDirectories(Paths.get(CHECKLISTS_DIR));
-			Files.createDirectories(Paths.get(CALENDAR_DIR));
-		} catch (IOException e) {
-			System.err.println("Error creating data directories: " + e.getMessage());
+			JSONObject boardData = new JSONObject();
+			boardData.put("lastUpdated", System.currentTimeMillis());
+
+			// Add boxes
+			JSONArray boxesArray = new JSONArray();
+			Box currentBox = boxList.getFirstNode();
+			int boxCount = 0;
+
+			while (currentBox != null) {
+				JSONObject boxJson = new JSONObject();
+				boxJson.put("id", currentBox.getId());
+				boxJson.put("title", currentBox.getTitle());
+				boxJson.put("x", currentBox.getBoxX());
+				boxJson.put("y", currentBox.getBoxY());
+
+				// Add content
+				try {
+					boxJson.put("content", currentBox.getContent());
+				} catch (Exception e) {
+					boxJson.put("content", "");
+				}
+
+				// Add connections
+				JSONArray connectionsArray = new JSONArray();
+				for (Integer connectionId : currentBox.getConnectedBoxIds()) {
+					connectionsArray.put(connectionId);
+				}
+				boxJson.put("connections", connectionsArray);
+
+				boxesArray.put(boxJson);
+				currentBox = currentBox.getNext();
+				boxCount++;
+			}
+			boardData.put("boxes", boxesArray);
+
+			// Write to file
+			try (FileWriter writer = new FileWriter(SHARED_BOARD_FILE)) {
+				writer.write(boardData.toString(2));
+				System.out.println("Shared board saved with " + boxCount + " boxes");
+			}
+
+		} catch (Exception e) {
+			System.err.println("Error saving shared board: " + e.getMessage());
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Loads the shared board state
+	 */
+	public JSONObject loadSharedBoard() {
+		try {
+			File boardFile = new File(SHARED_BOARD_FILE);
+			if (!boardFile.exists()) {
+				System.out.println("No shared board file exists yet");
+				return null;
+			}
+
+			StringBuilder content = new StringBuilder();
+			try (BufferedReader reader = new BufferedReader(new FileReader(SHARED_BOARD_FILE))) {
+				String line;
+				while ((line = reader.readLine()) != null) {
+					content.append(line);
+				}
+			}
+
+			JSONObject boardData = new JSONObject(content.toString());
+			System.out.println("Shared board loaded successfully");
+			return boardData;
+
+		} catch (Exception e) {
+			System.err.println("Error loading shared board: " + e.getMessage());
+			e.printStackTrace();
+			return null;
 		}
 	}
 
@@ -137,13 +209,21 @@ public class SaveAndLoad {
 			}
 
 			// Resets the "graphical" connections for box
-			for (int i = 0; i < list.getLength(); i++) {
-				Box box = list.getNode(i);
-				List<Integer> connections = box.getConnectedBoxIds();
+			Box currentBox = list.getFirstNode();
+			int boxIndex = 0;
+			while (currentBox != null) {
+				List<Integer> connections = currentBox.getConnectedBoxIds();
 
 				for (Integer connectedId : connections) {
-					list.getNode(connectedId).setIsConnectedBy(i);
+					// Use getBoxById instead of getNode(connectedId)
+					Box connectedBox = list.getBoxById(connectedId);
+					if (connectedBox != null) {
+						connectedBox.setIsConnectedBy(boxIndex);
+					}
 				}
+
+				currentBox = currentBox.getNext();
+				boxIndex++;
 			}
 
 			// Log the load
@@ -421,16 +501,6 @@ public class SaveAndLoad {
 			System.err.println("Error deleting note: " + e.getMessage());
 			return false;
 		}
-	}
-
-	public void saveAllBoards(List<Board> boards, String username) {
-		// Convert boards to JSON
-		// Write to file: user_data/{username}/boards.json
-	}
-
-	public void saveAllNotes(List<Note> notes, String username) {
-		// Convert notes to JSON
-		// Write to file: user_data/{username}/notes.json
 	}
 
 	// Similar methods for checklists and calendar events

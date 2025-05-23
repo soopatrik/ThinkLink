@@ -1,4 +1,4 @@
-package main.notes;
+package main.java.notes;
 
 /**
  * Data model for a personal note in ThinkLink

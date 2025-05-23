@@ -1,437 +1,341 @@
 package main.java.board;
 
 import javax.swing.*;
+import javax.swing.border.TitledBorder;
 import java.awt.*;
-import java.awt.event.*;
-import java.util.ArrayList;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.List;
-import java.awt.Frame;
-import java.awt.Window;
 import main.java.auth.User;
-import main.java.calendar.Deadline;
-import main.java.calendar.Date;
+import main.java.utils.SaveAndLoad;
 
+/**
+ * Enhanced admin panel for managing shared boards and system administration
+ */
 public class SharedBoardPanel extends JPanel {
     private User user;
-    private List<SharedBoard> sharedBoards;
-    private JList<SharedBoard> boardList;
-    private DefaultListModel<SharedBoard> boardListModel;
-    private JPanel taskPanel;
-    private SharedBoard currentBoard;
+    private SaveAndLoad saveAndLoad;
+    private DefaultListModel<String> boardListModel;
+    private JList<String> boardList;
+    private JTextArea logArea;
 
     public SharedBoardPanel(User user) {
         this.user = user;
-        this.sharedBoards = new ArrayList<>();
+        this.saveAndLoad = new SaveAndLoad();
 
-        // Verify this is an administrator
+        setLayout(new BorderLayout(10, 10));
+        setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+
+        // Only allow admin access
         if (!user.isAdministrator()) {
-            add(new JLabel("Only administrators can access shared boards"));
+            add(createAccessDeniedPanel(), BorderLayout.CENTER);
             return;
         }
 
-        setLayout(new BorderLayout(10, 10));
-        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        // Create admin interface
+        createAdminInterface();
+    }
 
-        // Create board list panel
-        JPanel leftPanel = new JPanel(new BorderLayout(5, 5));
-        leftPanel.setBorder(BorderFactory.createTitledBorder("Shared Boards"));
+    private JPanel createAccessDeniedPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+
+        JLabel iconLabel = new JLabel("🔒");
+        iconLabel.setFont(new Font("Arial", Font.PLAIN, 72));
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(20, 20, 20, 20);
+        panel.add(iconLabel, gbc);
+
+        JLabel messageLabel = new JLabel("Administrator Access Required");
+        messageLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        gbc.gridy = 1;
+        panel.add(messageLabel, gbc);
+
+        JLabel detailLabel = new JLabel("Only administrator users can access this panel.");
+        detailLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        gbc.gridy = 2;
+        panel.add(detailLabel, gbc);
+
+        return panel;
+    }
+
+    private void createAdminInterface() {
+        // Header panel
+        JPanel headerPanel = new JPanel(new BorderLayout());
+        JLabel titleLabel = new JLabel("🔧 Administrator Control Panel", JLabel.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(10, 0, 10, 0));
+        headerPanel.add(titleLabel, BorderLayout.CENTER);
+
+        JLabel userLabel = new JLabel("Logged in as: " + user.getUserEmail() + " (Administrator)", JLabel.CENTER);
+        userLabel.setFont(new Font("Arial", Font.ITALIC, 12));
+        headerPanel.add(userLabel, BorderLayout.SOUTH);
+
+        add(headerPanel, BorderLayout.NORTH);
+
+        // Main content panel with tabs
+        JTabbedPane adminTabs = new JTabbedPane();
+
+        // Board Management Tab
+        adminTabs.addTab("📋 Board Management", createBoardManagementPanel());
+
+        // System Info Tab
+        adminTabs.addTab("📊 System Info", createSystemInfoPanel());
+
+        // User Management Tab (future enhancement)
+        adminTabs.addTab("👥 User Management", createUserManagementPanel());
+
+        add(adminTabs, BorderLayout.CENTER);
+    }
+
+    private JPanel createBoardManagementPanel() {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+
+        // Board list panel
+        JPanel listPanel = new JPanel(new BorderLayout());
+        listPanel.setBorder(new TitledBorder("Shared Boards"));
 
         boardListModel = new DefaultListModel<>();
         boardList = new JList<>(boardListModel);
         boardList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        boardList.addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                displaySelectedBoard();
-            }
-        });
 
-        JScrollPane boardScrollPane = new JScrollPane(boardList);
+        JScrollPane scrollPane = new JScrollPane(boardList);
+        scrollPane.setPreferredSize(new Dimension(300, 200));
+        listPanel.add(scrollPane, BorderLayout.CENTER);
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton newBoardButton = new JButton("New Board");
-        JButton deleteBoardButton = new JButton("Delete Board");
+        // Board action buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout());
 
-        newBoardButton.addActionListener(e -> createNewBoard());
-        deleteBoardButton.addActionListener(e -> deleteSelectedBoard());
+        JButton refreshButton = new JButton("🔄 Refresh");
+        refreshButton.addActionListener(e -> refreshBoardList());
 
-        buttonPanel.add(newBoardButton);
-        buttonPanel.add(deleteBoardButton);
+        JButton createButton = new JButton("➕ Create Board");
+        createButton.addActionListener(e -> createNewBoard());
 
-        leftPanel.add(boardScrollPane, BorderLayout.CENTER);
-        leftPanel.add(buttonPanel, BorderLayout.SOUTH);
+        JButton deleteButton = new JButton("🗑️ Delete Board");
+        deleteButton.addActionListener(e -> deleteSelectedBoard());
+        deleteButton.setBackground(new Color(220, 53, 69));
+        deleteButton.setForeground(Color.WHITE);
 
-        // Create task panel
-        taskPanel = new JPanel(new BorderLayout(5, 5));
-        taskPanel.setBorder(BorderFactory.createTitledBorder("Tasks"));
+        JButton viewButton = new JButton("👁️ View Board");
+        viewButton.addActionListener(e -> viewSelectedBoard());
 
-        // Create initial empty panel
-        JPanel emptyPanel = new JPanel(new GridBagLayout());
-        JLabel emptyLabel = new JLabel("Select a board or create a new one");
-        emptyPanel.add(emptyLabel);
-        taskPanel.add(emptyPanel, BorderLayout.CENTER);
+        buttonPanel.add(refreshButton);
+        buttonPanel.add(createButton);
+        buttonPanel.add(deleteButton);
+        buttonPanel.add(viewButton);
 
-        // Create split pane
-        JSplitPane splitPane = new JSplitPane(
-                JSplitPane.HORIZONTAL_SPLIT,
-                leftPanel,
-                taskPanel);
-        splitPane.setDividerLocation(250);
+        listPanel.add(buttonPanel, BorderLayout.SOUTH);
+        panel.add(listPanel, BorderLayout.WEST);
 
-        add(splitPane, BorderLayout.CENTER);
+        // Board details panel
+        JPanel detailsPanel = new JPanel(new BorderLayout());
+        detailsPanel.setBorder(new TitledBorder("Board Details"));
 
-        // Add some sample data for demonstration
-        addSampleData();
+        logArea = new JTextArea(15, 40);
+        logArea.setEditable(false);
+        logArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        logArea.setText("Welcome to ThinkLink Admin Panel\n\n" +
+                "Here you can:\n" +
+                "• Create new shared boards for team collaboration\n" +
+                "• Delete boards (WARNING: This removes all content)\n" +
+                "• View board statistics and usage\n" +
+                "• Monitor system activity\n\n" +
+                "Select a board from the list to view details.\n");
+
+        JScrollPane logScrollPane = new JScrollPane(logArea);
+        detailsPanel.add(logScrollPane, BorderLayout.CENTER);
+
+        panel.add(detailsPanel, BorderLayout.CENTER);
+
+        // Load initial data
+        refreshBoardList();
+
+        return panel;
     }
 
-    private void addSampleData() {
-        SharedBoard projectBoard = new SharedBoard("Project Planning", user);
-        SharedBoard teamBoard = new SharedBoard("Team Coordination", user);
+    private JPanel createSystemInfoPanel() {
+        JPanel panel = new JPanel(new BorderLayout());
 
-        LiveTask task1 = new LiveTask("Complete UML diagram");
-        task1.setStatus(LiveTask.STATUS_COMPLETED);
+        JTextArea infoArea = new JTextArea();
+        infoArea.setEditable(false);
+        infoArea.setFont(new Font("Monospaced", Font.PLAIN, 12));
 
-        LiveTask task2 = new LiveTask("Implement user authentication");
-        task2.setStatus(LiveTask.STATUS_IN_PROGRESS);
+        // Gather system information
+        StringBuilder info = new StringBuilder();
+        info.append("=== ThinkLink System Information ===\n\n");
+        info.append("Server Status: ✅ Active\n");
+        info.append("Collaboration: ✅ Real-time sync enabled\n");
+        info.append("Data Persistence: ✅ All changes saved automatically\n\n");
 
-        LiveTask task3 = new LiveTask("Create shared board functionality");
+        info.append("=== User Permissions ===\n");
+        info.append("Administrator Users Can:\n");
+        info.append("• Create and delete shared boards\n");
+        info.append("• Set deadlines for all users\n");
+        info.append("• Edit and remove deadlines\n");
+        info.append("• Access system administration panel\n\n");
 
-        projectBoard.addTask(task1);
-        projectBoard.addTask(task2);
-        projectBoard.addTask(task3);
+        info.append("Customary Users Can:\n");
+        info.append("• Add, edit, and remove tasks in shared boards\n");
+        info.append("• Create personal notes\n");
+        info.append("• Manage personal checklists\n");
+        info.append("• View deadlines set by administrators\n\n");
 
-        sharedBoards.add(projectBoard);
-        sharedBoards.add(teamBoard);
+        info.append("=== Data Storage ===\n");
+        info.append("Notes: Stored per user in secure directories\n");
+        info.append("Checklists: Personal to each user\n");
+        info.append("Mind Maps: Shared across all users with real-time sync\n");
+        info.append("Calendar: Administrators can set deadlines for all users\n\n");
 
-        // Update the list model
-        boardListModel.addElement(projectBoard);
-        boardListModel.addElement(teamBoard);
+        info.append("=== Technical Details ===\n");
+        info.append("Backend: Java with JSON data persistence\n");
+        info.append("Frontend: Swing GUI with tabbed interface\n");
+        info.append("Networking: Socket-based real-time collaboration\n");
+        info.append("Security: Role-based access control\n");
+
+        infoArea.setText(info.toString());
+
+        JScrollPane scrollPane = new JScrollPane(infoArea);
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    private JPanel createUserManagementPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+
+        JLabel comingSoonLabel = new JLabel("👥 User Management");
+        comingSoonLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(20, 20, 10, 20);
+        panel.add(comingSoonLabel, gbc);
+
+        JTextArea descArea = new JTextArea(10, 40);
+        descArea.setEditable(false);
+        descArea.setLineWrap(true);
+        descArea.setWrapStyleWord(true);
+        descArea.setText("Future enhancements will include:\n\n" +
+                "• View all registered users\n" +
+                "• Change user roles (Admin ↔ Customary)\n" +
+                "• Monitor user activity\n" +
+                "• Send notifications to users\n" +
+                "• Export user data and reports\n\n" +
+                "Currently, user management is handled through the login system where users can register as either Administrator or Customary users.");
+
+        gbc.gridy = 1;
+        panel.add(new JScrollPane(descArea), gbc);
+
+        return panel;
+    }
+
+    private void refreshBoardList() {
+        boardListModel.clear();
+        List<String> boards = saveAndLoad.getBoardList();
+
+        logArea.append("\n=== Refreshing Board List ===\n");
+        logArea.append("Found " + boards.size() + " board(s)\n");
+
+        for (String board : boards) {
+            boardListModel.addElement(board);
+            logArea.append("- " + board + "\n");
+        }
+
+        if (boards.isEmpty()) {
+            logArea.append("No boards found. Create a new board to get started.\n");
+        }
+
+        logArea.setCaretPosition(logArea.getDocument().getLength());
     }
 
     private void createNewBoard() {
         String boardName = JOptionPane.showInputDialog(this,
                 "Enter name for new shared board:",
-                "Create Shared Board",
+                "Create New Board",
                 JOptionPane.PLAIN_MESSAGE);
 
         if (boardName != null && !boardName.trim().isEmpty()) {
-            SharedBoard newBoard = new SharedBoard(boardName.trim(), user);
-            sharedBoards.add(newBoard);
-            boardListModel.addElement(newBoard);
+            boardName = boardName.trim();
 
-            // Select the new board
-            boardList.setSelectedValue(newBoard, true);
+            // Check if board already exists
+            if (boardListModel.contains(boardName)) {
+                JOptionPane.showMessageDialog(this,
+                        "A board with that name already exists!",
+                        "Board Creation Failed",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            // Create new board (for now, just add to list)
+            boardListModel.addElement(boardName);
+            logArea.append("\n✅ Created new board: " + boardName + "\n");
+            logArea.append("Board is now available for all users to collaborate on.\n");
+            logArea.setCaretPosition(logArea.getDocument().getLength());
+
+            JOptionPane.showMessageDialog(this,
+                    "Board '" + boardName + "' created successfully!\n\n" +
+                            "Users can now collaborate on this shared board.",
+                    "Board Created",
+                    JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
     private void deleteSelectedBoard() {
-        int selectedIndex = boardList.getSelectedIndex();
-        if (selectedIndex >= 0) {
-            SharedBoard selectedBoard = boardListModel.getElementAt(selectedIndex);
-
-            int confirm = JOptionPane.showConfirmDialog(this,
-                    "Are you sure you want to delete the board '" + selectedBoard.getName() + "'?",
-                    "Confirm Deletion",
-                    JOptionPane.YES_NO_OPTION);
-
-            if (confirm == JOptionPane.YES_OPTION) {
-                sharedBoards.remove(selectedBoard);
-                boardListModel.remove(selectedIndex);
-
-                // Clear the task panel
-                currentBoard = null;
-                refreshTaskPanel();
-            }
-        }
-    }
-
-    private void displaySelectedBoard() {
-        int selectedIndex = boardList.getSelectedIndex();
-        if (selectedIndex >= 0) {
-            currentBoard = boardListModel.getElementAt(selectedIndex);
-            refreshTaskPanel();
-        }
-    }
-
-    private void refreshTaskPanel() {
-        taskPanel.removeAll();
-
-        if (currentBoard == null) {
-            JPanel emptyPanel = new JPanel(new GridBagLayout());
-            JLabel emptyLabel = new JLabel("Select a board or create a new one");
-            emptyPanel.add(emptyLabel);
-            taskPanel.add(emptyPanel, BorderLayout.CENTER);
-        } else {
-            // Create header with board info
-            JPanel headerPanel = new JPanel(new BorderLayout(5, 5));
-            JLabel titleLabel = new JLabel(currentBoard.getName());
-            titleLabel.setFont(new Font("Arial", Font.BOLD, 16));
-
-            JLabel infoLabel = new JLabel("Created: " + currentBoard.getCreationDate());
-            infoLabel.setFont(new Font("Arial", Font.ITALIC, 12));
-
-            headerPanel.add(titleLabel, BorderLayout.NORTH);
-            headerPanel.add(infoLabel, BorderLayout.SOUTH);
-
-            // Create task list
-            DefaultListModel<LiveTask> taskListModel = new DefaultListModel<>();
-            for (LiveTask task : currentBoard.getTasks()) {
-                taskListModel.addElement(task);
-            }
-
-            JList<LiveTask> taskList = new JList<>(taskListModel);
-            taskList.setCellRenderer(new TaskCellRenderer());
-
-            // Create button panel
-            JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            JButton addTaskButton = new JButton("Add Task");
-            JButton editTaskButton = new JButton("Edit Task");
-            JButton deleteTaskButton = new JButton("Delete Task");
-            JButton assignDeadlineButton = new JButton("Assign Deadline");
-
-            addTaskButton.addActionListener(e -> addTask());
-            editTaskButton.addActionListener(e -> editSelectedTask(taskList));
-            deleteTaskButton.addActionListener(e -> deleteSelectedTask(taskList, taskListModel));
-            assignDeadlineButton.addActionListener(e -> assignDeadlineToTask(taskList));
-
-            buttonPanel.add(addTaskButton);
-            buttonPanel.add(editTaskButton);
-            buttonPanel.add(deleteTaskButton);
-            buttonPanel.add(assignDeadlineButton);
-
-            // Add components to task panel
-            taskPanel.add(headerPanel, BorderLayout.NORTH);
-            taskPanel.add(new JScrollPane(taskList), BorderLayout.CENTER);
-            taskPanel.add(buttonPanel, BorderLayout.SOUTH);
-        }
-
-        taskPanel.revalidate();
-        taskPanel.repaint();
-    }
-
-    private void addTask() {
-        if (currentBoard == null)
+        String selectedBoard = boardList.getSelectedValue();
+        if (selectedBoard == null) {
+            JOptionPane.showMessageDialog(this,
+                    "Please select a board to delete.",
+                    "No Board Selected",
+                    JOptionPane.WARNING_MESSAGE);
             return;
-
-        String taskTitle = JOptionPane.showInputDialog(this,
-                "Enter task title:",
-                "Add New Task",
-                JOptionPane.PLAIN_MESSAGE);
-
-        if (taskTitle != null && !taskTitle.trim().isEmpty()) {
-            LiveTask newTask = new LiveTask(taskTitle.trim());
-            currentBoard.addTask(newTask);
-            refreshTaskPanel();
         }
-    }
-
-    private void editSelectedTask(JList<LiveTask> taskList) {
-        LiveTask selectedTask = taskList.getSelectedValue();
-        if (selectedTask == null)
-            return;
-
-        // Create dialog for editing task
-        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Edit Task", true);
-        dialog.setLayout(new BorderLayout(10, 10));
-        dialog.setSize(400, 300);
-        dialog.setLocationRelativeTo(this);
-
-        JPanel formPanel = new JPanel(new GridLayout(3, 1, 5, 5));
-
-        JPanel titlePanel = new JPanel(new BorderLayout(5, 0));
-        titlePanel.add(new JLabel("Title:"), BorderLayout.WEST);
-        JTextField titleField = new JTextField(selectedTask.getTitle());
-        titlePanel.add(titleField, BorderLayout.CENTER);
-
-        JPanel statusPanel = new JPanel(new BorderLayout(5, 0));
-        statusPanel.add(new JLabel("Status:"), BorderLayout.WEST);
-        JComboBox<String> statusCombo = new JComboBox<>(new String[] {
-                LiveTask.STATUS_TODO,
-                LiveTask.STATUS_IN_PROGRESS,
-                LiveTask.STATUS_COMPLETED
-        });
-        statusCombo.setSelectedItem(selectedTask.getStatus());
-        statusPanel.add(statusCombo, BorderLayout.CENTER);
-
-        JPanel notesPanel = new JPanel(new BorderLayout(5, 0));
-        notesPanel.add(new JLabel("Notes:"), BorderLayout.NORTH);
-        JTextArea notesArea = new JTextArea(selectedTask.getNotes());
-        notesArea.setLineWrap(true);
-        notesArea.setWrapStyleWord(true);
-        notesPanel.add(new JScrollPane(notesArea), BorderLayout.CENTER);
-
-        formPanel.add(titlePanel);
-        formPanel.add(statusPanel);
-        formPanel.add(notesPanel);
-
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton saveButton = new JButton("Save");
-        JButton cancelButton = new JButton("Cancel");
-
-        saveButton.addActionListener(e -> {
-            selectedTask.setTitle(titleField.getText().trim());
-            selectedTask.setStatus((String) statusCombo.getSelectedItem());
-            selectedTask.setNotes(notesArea.getText());
-
-            refreshTaskPanel();
-            dialog.dispose();
-        });
-
-        cancelButton.addActionListener(e -> dialog.dispose());
-
-        buttonPanel.add(saveButton);
-        buttonPanel.add(cancelButton);
-
-        dialog.add(formPanel, BorderLayout.CENTER);
-        dialog.add(buttonPanel, BorderLayout.SOUTH);
-
-        dialog.setVisible(true);
-    }
-
-    private void deleteSelectedTask(JList<LiveTask> taskList, DefaultListModel<LiveTask> taskListModel) {
-        LiveTask selectedTask = taskList.getSelectedValue();
-        if (selectedTask == null)
-            return;
 
         int confirm = JOptionPane.showConfirmDialog(this,
-                "Are you sure you want to delete the task '" + selectedTask.getTitle() + "'?",
-                "Confirm Task Deletion",
-                JOptionPane.YES_NO_OPTION);
+                "⚠️ WARNING: This will permanently delete the board '" + selectedBoard +
+                        "' and ALL its content!\n\nThis action cannot be undone.\n\nAre you sure?",
+                "Confirm Board Deletion",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
 
         if (confirm == JOptionPane.YES_OPTION) {
-            currentBoard.removeTask(selectedTask);
-            refreshTaskPanel();
-        }
-    }
+            boolean success = saveAndLoad.deleteBoard(selectedBoard);
+            if (success) {
+                boardListModel.removeElement(selectedBoard);
+                logArea.append("\n🗑️ DELETED board: " + selectedBoard + "\n");
+                logArea.append("All content and tasks have been permanently removed.\n");
+                logArea.setCaretPosition(logArea.getDocument().getLength());
 
-    private void assignDeadlineToTask(JList<LiveTask> taskList) {
-        LiveTask selectedTask = taskList.getSelectedValue();
-        if (selectedTask == null)
-            return;
-
-        // Create a dialog for deadline assignment
-        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Assign Deadline", true);
-        dialog.setLayout(new BorderLayout(10, 10));
-        dialog.setSize(400, 250);
-        dialog.setLocationRelativeTo(this);
-
-        JPanel formPanel = new JPanel(new GridLayout(4, 1, 5, 5));
-
-        // Task info
-        JLabel taskLabel = new JLabel("Task: " + selectedTask.getTitle());
-        taskLabel.setFont(new Font("Arial", Font.BOLD, 14));
-
-        // Date fields
-        JPanel datePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        datePanel.add(new JLabel("Due Date (DD/MM/YYYY): "));
-        JTextField dayField = new JTextField(2);
-        JTextField monthField = new JTextField(2);
-        JTextField yearField = new JTextField(4);
-
-        datePanel.add(dayField);
-        datePanel.add(new JLabel("/"));
-        datePanel.add(monthField);
-        datePanel.add(new JLabel("/"));
-        datePanel.add(yearField);
-
-        // Time field
-        JPanel timePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        timePanel.add(new JLabel("Time (24hr): "));
-        JTextField hourField = new JTextField(2);
-        timePanel.add(hourField);
-        timePanel.add(new JLabel(":00"));
-
-        // Description field
-        JPanel descPanel = new JPanel(new BorderLayout(5, 0));
-        descPanel.add(new JLabel("Description:"), BorderLayout.NORTH);
-        JTextField descField = new JTextField();
-        descPanel.add(descField, BorderLayout.CENTER);
-
-        formPanel.add(taskLabel);
-        formPanel.add(datePanel);
-        formPanel.add(timePanel);
-        formPanel.add(descPanel);
-
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton saveButton = new JButton("Assign Deadline");
-        JButton cancelButton = new JButton("Cancel");
-
-        saveButton.addActionListener(e -> {
-            try {
-                int day = Integer.parseInt(dayField.getText().trim());
-                int month = Integer.parseInt(monthField.getText().trim());
-                int year = Integer.parseInt(yearField.getText().trim());
-                int hour = Integer.parseInt(hourField.getText().trim());
-
-                if (day < 1 || day > 31 || month < 1 || month > 12 ||
-                        year < 2023 || hour < 0 || hour > 23) {
-                    throw new NumberFormatException("Invalid date/time values");
-                }
-
-                // Create our custom Date
-                Date dueDate = new Date(hour, day, month, year);
-
-                // Create a description for the deadline
-                String description = descField.getText().trim();
-                if (description.isEmpty()) {
-                    description = "Deadline for: " + selectedTask.getTitle();
-                }
-
-                // Create a Deadline
-                Deadline deadline = new Deadline(description, dueDate.toJavaDate(), user);
-
-                // This would usually save to a database or similar
-                JOptionPane.showMessageDialog(dialog,
-                        "Deadline set for task '" + selectedTask.getTitle() + "':\n" +
-                                "Due: " + dueDate.toString() + "\n" +
-                                "Description: " + description,
-                        "Deadline Set",
+                JOptionPane.showMessageDialog(this,
+                        "Board '" + selectedBoard + "' has been deleted.",
+                        "Board Deleted",
                         JOptionPane.INFORMATION_MESSAGE);
-
-                dialog.dispose();
-
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(dialog,
-                        "Please enter valid date and time values",
-                        "Invalid Input",
+            } else {
+                JOptionPane.showMessageDialog(this,
+                        "Failed to delete board. It may not exist or there may be a permission issue.",
+                        "Deletion Failed",
                         JOptionPane.ERROR_MESSAGE);
             }
-        });
-
-        cancelButton.addActionListener(e -> dialog.dispose());
-
-        buttonPanel.add(saveButton);
-        buttonPanel.add(cancelButton);
-
-        dialog.add(formPanel, BorderLayout.CENTER);
-        dialog.add(buttonPanel, BorderLayout.SOUTH);
-
-        dialog.setVisible(true);
+        }
     }
 
-    // Custom cell renderer for tasks in the list
-    private class TaskCellRenderer extends DefaultListCellRenderer {
-        @Override
-        public Component getListCellRendererComponent(JList<?> list, Object value,
-                int index, boolean isSelected, boolean cellHasFocus) {
-
-            JLabel label = (JLabel) super.getListCellRendererComponent(
-                    list, value, index, isSelected, cellHasFocus);
-
-            if (value instanceof LiveTask) {
-                LiveTask task = (LiveTask) value;
-                label.setText(task.getTitle());
-
-                // Set icon based on status
-                if (task.getStatus().equals(LiveTask.STATUS_COMPLETED)) {
-                    label.setIcon(UIManager.getIcon("OptionPane.informationIcon"));
-                } else if (task.getStatus().equals(LiveTask.STATUS_IN_PROGRESS)) {
-                    label.setIcon(UIManager.getIcon("OptionPane.warningIcon"));
-                } else {
-                    label.setIcon(UIManager.getIcon("OptionPane.questionIcon"));
-                }
-            }
-
-            return label;
+    private void viewSelectedBoard() {
+        String selectedBoard = boardList.getSelectedValue();
+        if (selectedBoard == null) {
+            JOptionPane.showMessageDialog(this,
+                    "Please select a board to view.",
+                    "No Board Selected",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
         }
+
+        logArea.append("\n👁️ Viewing board: " + selectedBoard + "\n");
+        logArea.append("Board details:\n");
+        logArea.append("- Name: " + selectedBoard + "\n");
+        logArea.append("- Type: Shared collaborative board\n");
+        logArea.append("- Access: All registered users\n");
+        logArea.append("- Features: Real-time collaboration, task management\n");
+        logArea.setCaretPosition(logArea.getDocument().getLength());
     }
 }

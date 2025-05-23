@@ -2,6 +2,8 @@ package main.java.board;
 
 import java.awt.Graphics;
 import java.awt.Point;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 //////////////////////////////////////////
 //Connects all the Box Objects in memory//
@@ -9,12 +11,14 @@ import java.awt.Point;
 public class BoxList {
 	protected Box top;
 	private int size;
-	private int nodeCount;
+	// nodeCount was used for auto-incrementing legacy ID, server now handles unique
+	// 'id'
+	// private int nodeCount;
 
 	public BoxList() {
 		top = null;
 		size = 0;
-		nodeCount = 0;
+		// nodeCount = 0;
 	}
 
 	public void draw(Graphics g) {
@@ -37,29 +41,23 @@ public class BoxList {
 	}
 
 	public void moveNodeToTheFront(Box lpr) {
-		// If list is empty or node is already at the front
 		if (top == null || lpr == top) {
 			return;
 		}
-
-		// Find the node and its predecessor
 		Box current = top, next = lpr.getNext();
 		Box prev = null;
-
 		while (current != null && current != lpr) {
 			prev = current;
 			current = current.getNext();
 		}
-
-		// If node not found
 		if (current == null) {
 			return;
 		}
-
-		// Remove it from current position
-		prev.setNext(next);
-
-		// Insert at front
+		if (prev != null) {
+			prev.setNext(next);
+		} else {
+			// This should not be reached if lpr == top is handled.
+		}
 		lpr.setNext(top);
 		top = lpr;
 	}
@@ -73,12 +71,12 @@ public class BoxList {
 	}
 
 	public void addNode(Box lpr) {
-		size++;
+		if (lpr == null)
+			return;
 
 		if (top == null) {
 			top = lpr;
 			lpr.setNext(null);
-			lpr.setId(nodeCount++);
 		} else {
 			Box current = top;
 			while (current.getNext() != null) {
@@ -86,32 +84,61 @@ public class BoxList {
 			}
 			current.setNext(lpr);
 			lpr.setNext(null);
-			lpr.setId(nodeCount++);
 		}
+		size++;
 	}
 
 	public void deleteSelectedNode() {
 		if (top == null) {
 			return;
 		}
-
-		Box current;
-
-		// If head is selected
 		if (top.isSelected()) {
-			current = top;
 			top = top.getNext();
 			size--;
 			return;
 		}
-
-		// Find selected node
-		current = top;
+		Box current = top;
 		while (current.getNext() != null && !current.getNext().isSelected()) {
 			current = current.getNext();
 		}
+		if (current.getNext() != null) {
+			current.setNext(current.getNext().getNext());
+			size--;
+		}
+	}
 
-		// If found, delete it
+	public void deleteNode(Box boxToDelete) {
+		if (top == null || boxToDelete == null) {
+			return;
+		}
+		if (top == boxToDelete) {
+			top = top.getNext();
+			size--;
+			return;
+		}
+		Box current = top;
+		while (current.getNext() != null && current.getNext() != boxToDelete) {
+			current = current.getNext();
+		}
+		if (current.getNext() != null) {
+			current.setNext(current.getNext().getNext());
+			size--;
+		}
+	}
+
+	public void deleteNodeById(int id) {
+		if (top == null) {
+			return;
+		}
+		if (top.getId() == id) {
+			top = top.getNext();
+			size--;
+			return;
+		}
+		Box current = top;
+		while (current.getNext() != null && current.getNext().getId() != id) {
+			current = current.getNext();
+		}
 		if (current.getNext() != null) {
 			current.setNext(current.getNext().getNext());
 			size--;
@@ -121,7 +148,7 @@ public class BoxList {
 	public Box getNode(String name) {
 		Box current = top;
 		while (current != null) {
-			if (current.getText().equals(name)) {
+			if (current.getTitle().equals(name)) {
 				return current;
 			}
 			current = current.getNext();
@@ -129,10 +156,10 @@ public class BoxList {
 		return null;
 	}
 
-	public Box getNode(int ID) {
+	public Box getBoxByLegacyID(int legacyId) {
 		Box current = top;
 		while (current != null) {
-			if (current.getId() == ID) {
+			if (current.getID() == legacyId) {
 				return current;
 			}
 			current = current.getNext();
@@ -140,34 +167,15 @@ public class BoxList {
 		return null;
 	}
 
-	public void deleteNode(Box lpr) {
-		if (top == null) {
-			return;
-		}
-
-		Box current, previous;
-
-		// If head node is the one to delete
-		if (top == lpr) {
-			top = top.getNext();
-			size--;
-			return;
-		}
-
-		// Find node in list
-		previous = top;
-		current = top.getNext();
-
-		while (current != null && current != lpr) {
-			previous = current;
+	public Box getBoxById(int id) {
+		Box current = top;
+		while (current != null) {
+			if (current.getId() == id) {
+				return current;
+			}
 			current = current.getNext();
 		}
-
-		// If found, delete it
-		if (current != null) {
-			previous.setNext(current.getNext());
-			size--;
-		}
+		return null;
 	}
 
 	public int getSize() {
@@ -178,17 +186,36 @@ public class BoxList {
 		return top;
 	}
 
-	public int getNodeCount() {
-		return nodeCount;
-	}
-
 	public void clearList() {
 		top = null;
 		size = 0;
-		nodeCount = 0;
 	}
 
-	public int getLength() {
-		return size;
+	public boolean containsBoxWithId(int id) {
+		return getBoxById(id) != null;
+	}
+
+	public JSONArray toJSONArray() {
+		JSONArray jsonArray = new JSONArray();
+		Box current = top;
+		while (current != null) {
+			JSONObject boxJson = new JSONObject();
+			boxJson.put("id", current.getId());
+			boxJson.put("title", current.getTitle());
+			boxJson.put("content", current.getContent());
+			boxJson.put("x", current.getBoxX());
+			boxJson.put("y", current.getBoxY());
+
+			JSONArray connections = new JSONArray();
+			if (current.getConnectedBoxIds() != null) {
+				for (Integer connectedId : current.getConnectedBoxIds()) {
+					connections.put(connectedId);
+				}
+			}
+			boxJson.put("connections", connections);
+			jsonArray.put(boxJson);
+			current = current.getNext();
+		}
+		return jsonArray;
 	}
 }

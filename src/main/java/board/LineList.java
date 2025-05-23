@@ -19,9 +19,6 @@ public class LineList {
 			}
 		}
 
-		// Add connection to the boxes
-		source.addLink(target.getId(), null);
-
 		// Create new line
 		Line line = new Line(source, target);
 		lines.add(line);

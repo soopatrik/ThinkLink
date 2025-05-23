@@ -1,4 +1,4 @@
-package main.checklist;
+package main.java.checklist;
 
 import java.util.ArrayList;
 import java.util.List;

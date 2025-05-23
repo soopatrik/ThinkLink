@@ -1,4 +1,4 @@
-package main.notes;
+package main.java.notes;
 
 import javax.swing.*;
 import javax.swing.border.*;
