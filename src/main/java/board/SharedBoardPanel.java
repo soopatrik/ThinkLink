@@ -7,21 +7,28 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.List;
 import main.java.auth.User;
-import main.java.utils.SaveAndLoad;
+import main.java.utils.DatabaseSaveAndLoad;
 
 /**
  * Enhanced admin panel for managing shared boards and system administration
  */
 public class SharedBoardPanel extends JPanel {
     private User user;
-    private SaveAndLoad saveAndLoad;
+    private DatabaseSaveAndLoad saveAndLoad;
     private DefaultListModel<String> boardListModel;
     private JList<String> boardList;
     private JTextArea logArea;
 
     public SharedBoardPanel(User user) {
         this.user = user;
-        this.saveAndLoad = new SaveAndLoad();
+        this.saveAndLoad = new DatabaseSaveAndLoad();
+
+        // Check database availability for admin panel
+        if (saveAndLoad.isDatabasePrimary()) {
+            System.out.println("SharedBoardPanel: Using database storage");
+        } else {
+            System.out.println("SharedBoardPanel: Using file storage");
+        }
 
         setLayout(new BorderLayout(10, 10));
         setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));

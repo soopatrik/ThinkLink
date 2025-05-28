@@ -503,5 +503,4 @@ public class SaveAndLoad {
 		}
 	}
 
-	// Similar methods for checklists and calendar events
 }

@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.List;
 import javax.swing.event.ListSelectionListener;
 
-import main.java.utils.SaveAndLoad;
+import main.java.utils.DatabaseSaveAndLoad;
 
 /**
  * Panel for managing personal notes in ThinkLink
@@ -27,7 +27,7 @@ public class NotePanel extends JPanel {
     // Data
     private Map<String, Note> notes = new HashMap<>();
     private String currentNoteTitle = null;
-    private SaveAndLoad saveAndLoad;
+    private DatabaseSaveAndLoad saveAndLoad;
 
     /**
      * Creates a new NotePanel for the specified user
@@ -38,7 +38,7 @@ public class NotePanel extends JPanel {
     public NotePanel(String username, boolean isAdmin) {
         this.username = username;
         this.isAdmin = isAdmin;
-        this.saveAndLoad = new SaveAndLoad();
+        this.saveAndLoad = new DatabaseSaveAndLoad();
 
         setLayout(new BorderLayout(5, 5));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));

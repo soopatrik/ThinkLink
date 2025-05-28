@@ -10,7 +10,7 @@ import java.io.*;
 import java.nio.file.*;
 import main.java.auth.User;
 import main.java.network.ServerConnection;
-import main.java.utils.SaveAndLoad;
+import main.java.utils.DatabaseSaveAndLoad;
 import org.json.*;
 
 public class ChecklistPanel extends JPanel {
@@ -21,7 +21,7 @@ public class ChecklistPanel extends JPanel {
     private JTextField inputField;
     private User user;
     private ServerConnection serverConnection;
-    private SaveAndLoad saveAndLoad;
+    private DatabaseSaveAndLoad saveAndLoad;
     private static int nextId = 1;
     private static final String CHECKLIST_NAME = "Team Goals";
     private static final String GOALS_FILE = "data/shared_goals.json"; // Custom file for goals
@@ -33,7 +33,7 @@ public class ChecklistPanel extends JPanel {
     public ChecklistPanel(User user, ServerConnection serverConnection) {
         this.user = user;
         this.serverConnection = serverConnection;
-        this.saveAndLoad = new SaveAndLoad();
+        this.saveAndLoad = new DatabaseSaveAndLoad();
 
         setLayout(new BorderLayout());
 
@@ -103,6 +103,13 @@ public class ChecklistPanel extends JPanel {
         // Initialize checklist and load existing goals
         currentChecklist = new Checklist(CHECKLIST_NAME);
         checklists.add(currentChecklist);
+
+        // Check database availability
+        if (saveAndLoad.isDatabasePrimary()) {
+            System.out.println("ChecklistPanel: Using database storage");
+        } else {
+            System.out.println("ChecklistPanel: Using file storage");
+        }
 
         // ALWAYS load saved goals first using our custom JSON method
         loadGoalsFromDisk();

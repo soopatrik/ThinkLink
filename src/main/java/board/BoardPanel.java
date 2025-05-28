@@ -12,6 +12,7 @@ import main.java.network.ServerConnection;
 import org.json.*;
 import main.java.utils.SharedState;
 import main.java.application.Dashboard;
+import main.java.utils.DatabaseSaveAndLoad;
 
 public class BoardPanel extends JPanel implements MouseListener, MouseMotionListener {
 	private User user;
@@ -25,6 +26,7 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
 	private ServerConnection serverConnection;
 	private String boardId;
 	private Dashboard dashboard;
+	private DatabaseSaveAndLoad saveAndLoad;
 
 	public BoardPanel(User user, ServerConnection serverConnection, String boardId, Dashboard dashboard) {
 		this.user = user;
@@ -54,6 +56,14 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
 			this.serverConnection.sendMessage(joinMessage);
 			System.out.println(
 					"BoardPanel (" + userEmailForLog + "): Sent 'join_board' message for boardId: " + this.boardId);
+		}
+
+		this.saveAndLoad = new DatabaseSaveAndLoad();
+
+		if (saveAndLoad.isDatabasePrimary()) {
+			System.out.println("BoardPanel: Using database storage");
+		} else {
+			System.out.println("BoardPanel: Using file storage (database unavailable)");
 		}
 	}
 
@@ -838,6 +848,15 @@ public class BoardPanel extends JPanel implements MouseListener, MouseMotionList
 				}
 			} catch (Exception e) {
 				System.err.println("Error sending delete connections request: " + e.getMessage());
+			}
+		}
+	}
+
+	private void saveBoxToDatabase(Box box) {
+		if (saveAndLoad.isDatabasePrimary()) {
+			boolean saved = saveAndLoad.saveBoxUpdate(box, this.boardId);
+			if (!saved) {
+				System.err.println("Failed to save box to database");
 			}
 		}
 	}
